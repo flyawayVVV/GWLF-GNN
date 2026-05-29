@@ -1,0 +1,27 @@
+__pycache__/
+*.py[cod]
+
+# Large intermediate/raw data files are ignored by default, but the four
+# reproducibility workbooks in data/ are intentionally tracked.
+*.xlsx
+*.xls
+data/*
+!data/README.md
+!data/runoff-Volume.xlsx
+!data/groundwater-Volume.xlsx
+!data/Flow.xlsx
+!data/WatershedInfo_new.xlsx
+!data/CHECKSUMS_SHA256.txt
+
+# Experiment outputs.
+results*/
+model_runs/
+*.pt
+*.png
+*.log
+
+# IDE/system files.
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
