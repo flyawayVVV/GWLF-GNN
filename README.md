@@ -1,43 +1,43 @@
-# GWLF-STGNN 日尺度流量模拟
+# GWLF-STGNN Daily Streamflow Simulation
 
-简体中文 | [English](README.en.md)
+[简体中文](README.zh-CN.md) | English
 
-本仓库提供 GWLF-STGNN 研究中用于复现日尺度流量模拟实验的代码与处理后输入数据。研究对象为寸滩水文站以上长江上游流域，建模框架首先使用校准后的 GWLF 模型得到 16 个子流域的逐日地表径流与地下潜流产流量，再通过时空图神经网络表征河网约束下的水量传输过程，并与 LSTM、Transformer 时间序列基准模型进行比较。
+This repository provides the code and processed input data required to reproduce the daily streamflow simulation experiments of the GWLF-STGNN study. The study focuses on the upper Yangtze River basin above Cuntan hydrological station. A calibrated GWLF model is first used to estimate daily surface runoff and groundwater/baseflow generation for 16 subbasins. These physically informed water-generation inputs are then coupled with spatiotemporal graph neural networks to represent river-network-constrained water transfer, and the proposed models are compared with LSTM and Transformer time-series baselines.
 
-## 文件结构
+## Repository Structure
 
-- `baseline_lstm.py`：LSTM 基准模型，输入为 16 个子流域的地表径流和地下潜流历史序列。
-- `baseline_transformer.py`：Transformer Encoder 基准模型，使用与 LSTM 相同的输入。
-- `stgnn_direct.py`：基于直接上游-下游河网边的 STGNN 模型。
-- `stgnn_reachability.py`：基于水文可达性边的 STGNN 模型。
-- `run_experiments.py`：用于批量运行最终多随机种子实验并汇总结果。
-- `requirements.txt`：最小 Python 依赖列表。
-- `data/`：复现实验所需的处理后输入数据。
+- `baseline_lstm.py`: LSTM baseline using historical surface runoff and groundwater/baseflow series from 16 subbasins.
+- `baseline_transformer.py`: Transformer Encoder baseline using the same inputs as the LSTM model.
+- `stgnn_direct.py`: STGNN model based on the direct upstream-downstream river network.
+- `stgnn_reachability.py`: STGNN model based on hydrological reachability connections.
+- `run_experiments.py`: batch runner for the final multi-seed experiments and result summaries.
+- `requirements.txt`: minimal Python dependency list.
+- `data/`: processed input data required for reproducing the released experiments.
 
-## 运行环境
+## Runtime Environment
 
-实验代码使用 Python 3.9 和 PyTorch 开发。可先安装依赖：
+The experiments were developed with Python 3.9 and PyTorch. A typical installation is:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-如果使用 conda，建议根据本机 CUDA/CPU 环境先按照 PyTorch 官方命令安装 PyTorch，再安装 `requirements.txt` 中的其他依赖。
+If you use conda, install PyTorch first using the official command for your CUDA/CPU platform, and then install the remaining dependencies from `requirements.txt`.
 
-## 输入数据
+## Input Data
 
-`data/` 文件夹中包含模型脚本需要读取的 4 个处理后 Excel 数据文件：
+The `data/` directory contains four processed Excel workbooks used directly by the model scripts:
 
-- `runoff-Volume.xlsx`：16 个子流域逐日 GWLF 地表径流产流量。
-- `groundwater-Volume.xlsx`：16 个子流域逐日 GWLF 地下潜流/基流产流量。
-- `Flow.xlsx`：寸滩水文站逐日实测出口流量。
-- `WatershedInfo_new.xlsx`：子流域属性与河网拓扑信息。
+- `runoff-Volume.xlsx`: daily GWLF surface runoff volume for 16 subbasins.
+- `groundwater-Volume.xlsx`: daily GWLF groundwater/baseflow volume for 16 subbasins.
+- `Flow.xlsx`: observed daily outlet streamflow at Cuntan hydrological station.
+- `WatershedInfo_new.xlsx`: subbasin attributes and river-network topology.
 
-这些文件是神经网络复现实验使用的处理后输入数据。原始《中华人民共和国水文年鉴》资料、气象站原始观测、土地利用栅格、DEM 数据和 GIS 预处理中间成果未在本仓库中再分发。数据文件的 SHA256 校验值见 `data/CHECKSUMS_SHA256.txt`。
+These workbooks are the processed model inputs used for neural-network reproduction. Raw hydrological yearbook records, raw meteorological station observations, land-use rasters, DEM data, and GIS preprocessing products are not redistributed in this repository. SHA256 checksums for the released data files are provided in `data/CHECKSUMS_SHA256.txt`.
 
-## 单个模型运行
+## Run a Single Model
 
-示例：
+Examples:
 
 ```bash
 python baseline_lstm.py
@@ -46,14 +46,14 @@ python stgnn_direct.py
 python stgnn_reachability.py
 ```
 
-模型配置可通过环境变量覆盖。例如：
+Model settings can be overridden using environment variables. For example:
 
 ```bash
 DATA_DIR=data OUTPUT_DIR=results_lstm_seed42 SEED=42 python baseline_lstm.py
 DATA_DIR=data OUTPUT_DIR=results_direct_kirpich_seed42 SEED=42 EDGE_WEIGHT_MODE=inv_time_kirpich python stgnn_direct.py
 ```
 
-Windows PowerShell 中可使用：
+On Windows PowerShell, use:
 
 ```powershell
 $env:DATA_DIR = "data"
@@ -63,34 +63,34 @@ $env:EDGE_WEIGHT_MODE = "inv_time_kirpich"
 python stgnn_direct.py
 ```
 
-## 复现最终实验矩阵
+## Reproduce the Final Experiment Matrix
 
-最终实验矩阵共包含 50 次独立训练：
+The final experiment matrix contains 50 independent training runs:
 
-- LSTM 基准模型：5 个随机种子。
-- Transformer 基准模型：5 个随机种子。
-- direct STGNN：4 种边权设置 x 5 个随机种子。
-- reachability STGNN：4 种边权设置 x 5 个随机种子。
+- LSTM baseline: 5 random seeds.
+- Transformer baseline: 5 random seeds.
+- Direct STGNN: 4 edge-weight modes x 5 random seeds.
+- Reachability STGNN: 4 edge-weight modes x 5 random seeds.
 
-完整运行命令为：
+Run the full experiment matrix with:
 
 ```bash
 python run_experiments.py --data-dir data --result-root results_final
 ```
 
-如果结果目录中已有完成的 `metrics.csv`，可跳过已有实验：
+To skip completed runs that already contain `metrics.csv`:
 
 ```bash
 python run_experiments.py --data-dir data --result-root results_final --skip-existing
 ```
 
-只汇总已有结果时可运行：
+To summarize an existing result directory only:
 
 ```bash
 python run_experiments.py --result-root results_final --summary-only
 ```
 
-批处理脚本会在 `results_final/` 下保存每次训练的结果，并生成汇总表，包括：
+The batch runner stores per-run outputs and summary tables under `results_final/`, including:
 
 - `all_metrics.csv`
 - `test_metrics_by_seed.csv`
@@ -99,50 +99,50 @@ python run_experiments.py --result-root results_final --summary-only
 - `direct_edge_ablation_summary_mean_std.csv`
 - `reachability_edge_ablation_summary_mean_std.csv`
 
-## 边权设置
+## Edge-Weight Modes
 
-两个 STGNN 脚本均支持 4 种边权设置：
+Both STGNN scripts support four edge-weight modes:
 
-- `binary`：仅表示是否存在水文连通关系。
-- `inv_length`：按河道长度倒数构造边权。
-- `inv_time_v1`：按长度/流速估计传播时间，并使用传播时间倒数构造边权。
-- `inv_time_kirpich`：按 Kirpich 经验公式估计相对汇流时间，并使用时间倒数构造边权。
+- `binary`: hydrological connectivity only.
+- `inv_length`: inverse river length.
+- `inv_time_v1`: inverse travel time estimated from river length and velocity.
+- `inv_time_kirpich`: inverse relative concentration time estimated using the Kirpich empirical equation.
 
-最终实验中，`stgnn_direct.py` 默认使用 6 层 GNN，`stgnn_reachability.py` 默认使用 1 层 GNN。
+In the final experiments, `stgnn_direct.py` uses 6 GNN layers by default, while `stgnn_reachability.py` uses 1 GNN layer by default.
 
-## 环境变量说明
+## Environment Variable Notes
 
-脚本中保留了：
+The scripts keep the following setting:
 
 ```python
 os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
 ```
 
-该设置用于 PyTorch 在启用确定性 CUDA 算法时提高 GPU 计算的可复现性；对 CPU 运行通常没有影响，用户也可以在运行前自行覆盖。
+This setting is used by PyTorch when deterministic CUDA algorithms are enabled. It improves reproducibility for GPU runs and is harmless for CPU-only runs.
 
-早期内部脚本中曾包含：
+Earlier internal scripts also included:
 
 ```python
 os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 ```
 
-这不是通用必要设置，而是 Windows/Anaconda 环境中 Intel OpenMP 重复运行库报错时的临时规避方法。本公开版本不再默认启用它。如确实遇到 OpenMP 重复库错误，可优先修正 Python 环境，或临时运行：
+This is not a generally required setting. It is a temporary workaround for duplicate Intel OpenMP runtime errors sometimes encountered in Windows/Anaconda environments. It is not enabled by default in this public release. If the error occurs, first consider fixing the Python environment. As a temporary workaround, the batch runner provides:
 
 ```bash
 python run_experiments.py --allow-duplicate-openmp
 ```
 
-## 输出文件
+## Outputs
 
-每个模型运行会输出：
+Each model run writes:
 
 - `config.csv`
 - `split_info.csv`
 - `training_log.csv`
 - `training_summary.csv`
 - `metrics.csv`
-- `train_predictions.csv`、`val_predictions.csv`、`test_predictions.csv`
-- `train_hydrograph.png`、`val_hydrograph.png`、`test_hydrograph.png`
+- `train_predictions.csv`, `val_predictions.csv`, `test_predictions.csv`
+- `train_hydrograph.png`, `val_hydrograph.png`, `test_hydrograph.png`
 - `best_model.pt`
 
-STGNN 模型还会额外输出 `edge_table_used.csv`，用于检查实际参与训练的图边及其属性。
+The STGNN scripts additionally write `edge_table_used.csv`, which records the graph edges and edge attributes used by the model.
